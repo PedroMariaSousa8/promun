@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>proMUN — Single File App</title>
+    <!-- Tailwind via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React + ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-white text-gray-900 antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo } = React;
+      const cn = (...c) => c.filter(Boolean).join(" ");
+      const ROUTES = ["home","about","clubs","resources","events","join","support"];
+
+      function useHashRoute() {
+        const get = () => {
+          const h = (window.location.hash || "#/").replace(/^#\/?/, "");
+          const r = (h.split("/")[0] || "home");
+          return ROUTES.includes(r) ? r : "home";
+        };
+        const [route, setRoute] = useState(get);
+        useEffect(() => {
+          const onHash = () => setRoute(get());
+          window.addEventListener("hashchange", onHash);
+          return () => window.removeEventListener("hashchange", onHash);
+        }, []);
+        const nav = (r) => { window.location.hash = "/" + r; setRoute(r); };
+        return [route, nav];
+      }
+
+      const CLUBS = [];
+      const EVENTS = [
+        { title: "SJSMUN 2026 Conference", date: "December 2026", location: "Lisboa", blurb: "The official proMUN national conference for 2026.", href: "#" },
+      ];
+
+      const Container = ({children,className=""}) => <div className={cn("mx-auto max-w-7xl px-4 sm:px-6 lg:px-8", className)}>{children}</div>;
+      const Card = ({children}) => <div className="rounded-xl border border-gray-200 p-6 bg-white shadow-sm">{children}</div>;
+      const Button = ({children,onClick,href,variant="primary"}) => {
+        const cls = cn(
+          "px-4 py-2 rounded-md text-sm font-medium",
+          variant === "primary" && "bg-teal-600 text-white hover:bg-teal-700",
+          variant === "outline" && "border border-gray-300 hover:bg-gray-50"
+        );
+        return href ? <a className={cls} href={href}>{children}</a> : <button className={cls} onClick={onClick}>{children}</button>;
+      };
+      const Logo = () => (
+        <div className="flex items-center gap-2 select-none">
+          <svg width="28" height="28" viewBox="0 0 256 256">
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0A3D62" />
+                <stop offset="50%" stopColor="#17BEBB" />
+                <stop offset="100%" stopColor="#F6C343" />
+              </linearGradient>
+            </defs>
+            <rect width="256" height="256" rx="32" fill="url(#g)" />
+            <g fill="white">
+              <circle cx="128" cy="100" r="36" opacity="0.95" />
+              <path d="M64 176c16-28 40-44 64-44s48 16 64 44v16H64v-16z" />
+            </g>
+          </svg>
+          <span className="font-bold text-lg">proMUN</span>
+        </div>
+      );
+
+      const Navbar = ({route,onNav}) => {
+        const links = useMemo(() => [
+          { to: "home", label: "Home" },
+          { to: "about", label: "About" },
+          { to: "clubs", label: "Clubs" },
+          { to: "resources", label: "Resources" },
+          { to: "events", label: "Events" },
+          { to: "join", label: "Join" },
+          { to: "support", label: "Support" },
+        ], []);
+        return (
+          <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-200">
+            <Container className="h-16 flex items-center justify-between">
+              <a href="#/home" onClick={(e) => {e.preventDefault(); onNav("home");}}><Logo /></a>
+              <nav className="hidden md:flex items-center gap-1">
+                {links.map(l => (
+                  <a key={l.to} href={`#/${l.to}`} onClick={(e)=>{e.preventDefault(); onNav(l.to);}}
+                     className={cn("px-3 py-2 rounded-md text-sm font-medium", route===l.to ? "bg-teal-600/10 text-teal-700" : "text-gray-700 hover:bg-gray-100")}>
+                    {l.label}
+                  </a>
+                ))}
+              </nav>
+            </Container>
+          </header>
+        );
+      };
+
+      const Footer = () => (
+        <footer className="border-t border-gray-200">
+          <Container className="py-10 text-sm text-gray-600 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <p>© {new Date().getFullYear()} proMUN — Associação para o Desenvolvimento do Modelo ONU nas Escolas Portuguesas</p>
+            <p className="opacity-80">Made with ❤️ for students and teachers.</p>
+          </Container>
+        </footer>
+      );
+
+      const Hero = ({ onStart }) => (
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-900 via-teal-500 to-amber-400 opacity-20 blur-3xl"></div>
+          <Container className="py-20 text-center">
+            <h1 className="text-4xl sm:text-6xl font-extrabold">Bringing MUN to every public school in Portugal</h1>
+            <p className="mt-6 text-lg text-gray-700 max-w-2xl mx-auto">
+              proMUN trains teachers, supports student clubs, and hosts inspiring conferences—so more students discover diplomacy, debate, and global citizenship.
+            </p>
+            <div className="mt-8 flex justify-center gap-3">
+              <Button onClick={onStart}>Start a Club</Button>
+              <Button href="#/resources" variant="outline">Teacher Resources</Button>
+            </div>
+          </Container>
+        </section>
+      );
+
+      const HomeSection = ({ onNav }) => (
+        <>
+          <Hero onStart={() => onNav("join")} />
+          <Container className="py-16 grid md:grid-cols-3 gap-6">
+            {[{ title: "Teacher Workshops", desc: "Training to launch and sustain MUN.", href: "#/resources" },
+              { title: "Start a proMUN Club", desc: "Toolkit, mentorship, and branding.", href: "#/join" },
+              { title: "Host a Conference", desc: "Guides and templates to run MUN.", href: "#/resources" }].map(c => (
+              <Card key={c.title}>
+                <h3 className="text-xl font-bold mb-2">{c.title}</h3>
+                <p className="text-sm text-gray-600">{c.desc}</p>
+                <div className="mt-4"><a href={c.href}>Explore →</a></div>
+              </Card>
+            ))}
+          </Container>
+        </>
+      );
+
+      const AboutSection = () => (
+        <Container className="py-16 space-y-6 max-w-3xl">
+          <h1 className="text-3xl">About proMUN</h1>
+          <p>Our mission is to make Model United Nations accessible to every public school in Portugal.</p>
+          <p>Why we do it: We’ve seen how MUN transforms classrooms into spaces of debate, empathy, and leadership.</p>
+          <h2 className="text-2xl mt-8">Founders</h2>
+          <div className="grid md:grid-cols-3 gap-6 mt-4">
+            {[1,2,3].map(i => (
+              <Card key={i}>
+                <div className="h-32 bg-gray-100 mb-3"></div>
+                <h3 className="font-semibold">Founder {i}</h3>
+                <p className="text-sm text-gray-600">Role / short bio</p>
+              </Card>
+            ))}
+          </div>
+        </Container>
+      );
+
+      const ClubsSection = () => (
+        <Container className="py-16">
+          <h1 className="text-3xl mb-4">proMUN Clubs</h1>
+          {CLUBS.length === 0 && <p>No clubs yet. Be the first!</p>}
+        </Container>
+      );
+
+      const ResourcesSection = () => (
+        <Container className="py-16 max-w-4xl">
+          <h1 className="text-3xl mb-4">Resources</h1>
+          <ul className="list-disc pl-6">
+            <li>Club Constitution template</li>
+            <li>Chairing & Rules guides</li>
+            <li>Conference-in-a-Box</li>
+          </ul>
+        </Container>
+      );
+
+      const EventsSection = () => (
+        <Container className="py-16">
+          <h1 className="text-3xl mb-6">Events & Conferences</h1>
+          {EVENTS.map(e => (
+            <Card key={e.title}>
+              <h3 className="text-lg font-semibold">{e.title}</h3>
+              <p className="text-sm text-gray-600">{e.date} • {e.location}</p>
+              <p className="text-sm mt-1">{e.blurb}</p>
+            </Card>
+          ))}
+        </Container>
+      );
+
+      const JoinSection = () => (
+        <Container className="py-16 max-w-3xl">
+          <h1 className="text-3xl mb-4">Start or Affiliate a proMUN Club</h1>
+          <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); alert("Submitted (demo)"); }}>
+            <input placeholder="School name" className="border p-2 rounded" required />
+            <input placeholder="City" className="border p-2 rounded" required />
+            <input placeholder="Club liaison" className="border p-2 rounded" required />
+            <input type="email" placeholder="Email" className="border p-2 rounded" required />
+            <textarea placeholder="Message" className="border p-2 rounded"></textarea>
+            <Button>Submit</Button>
+          </form>
+        </Container>
+      );
+
+      const SupportSection = () => (
+        <Container className="py-16 max-w-3xl">
+          <h1 className="text-3xl mb-4">Support proMUN</h1>
+          <p>Your donation enables free resources for public schools.</p>
+        </Container>
+      );
+
+      function App() {
+        const [route, nav] = useHashRoute();
+        useEffect(() => { if (!window.location.hash) nav("home"); }, []);
+        return (
+          <div className="min-h-screen flex flex-col">
+            <Navbar route={route} onNav={nav} />
+            <main className="flex-1">
+              {route === "home" && <HomeSection onNav={nav} />}
+              {route === "about" && <AboutSection />}
+              {route === "clubs" && <ClubsSection />}
+              {route === "resources" && <ResourcesSection />}
+              {route === "events" && <EventsSection />}
+              {route === "join" && <JoinSection />}
+              {route === "support" && <SupportSection />}
+            </main>
+            <Footer />
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

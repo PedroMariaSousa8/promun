@@ -53,7 +53,7 @@
       };
       const Logo = () => (
         <div className="flex items-center gap-2 select-none">
-          <svg width="28" height="28" viewBox="0 0 256 256">
+          <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden>
             <defs>
               <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="#0A3D62" />
@@ -71,8 +71,9 @@
         </div>
       );
 
-      const Navbar = ({route,onNav}) => {
-        const links = useMemo(() => [
+      function Navbar({route, onNav}) {
+        const [open, setOpen] = useState(false);
+        const links = useMemo(() => ([
           { to: "home", label: "Home" },
           { to: "about", label: "About" },
           { to: "clubs", label: "Clubs" },
@@ -80,23 +81,79 @@
           { to: "events", label: "Events" },
           { to: "join", label: "Join" },
           { to: "support", label: "Support" },
-        ], []);
+        ]), []);
+
+        // Close mobile menu on route change
+        useEffect(() => { setOpen(false); }, [route]);
+
         return (
           <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-200">
             <Container className="h-16 flex items-center justify-between">
-              <a href="#/home" onClick={(e) => {e.preventDefault(); onNav("home");}}><Logo /></a>
+              <a href="#/home" onClick={(e) => {e.preventDefault(); onNav("home");}} aria-label="Go to home">
+                <Logo />
+              </a>
+
+              {/* Desktop nav */}
               <nav className="hidden md:flex items-center gap-1">
                 {links.map(l => (
                   <a key={l.to} href={`#/${l.to}`} onClick={(e)=>{e.preventDefault(); onNav(l.to);}}
-                     className={cn("px-3 py-2 rounded-md text-sm font-medium", route===l.to ? "bg-teal-600/10 text-teal-700" : "text-gray-700 hover:bg-gray-100")}>
+                     className={cn("px-3 py-2 rounded-md text-sm font-medium",
+                       route===l.to ? "bg-teal-600/10 text-teal-700" : "text-gray-700 hover:bg-gray-100")}
+                    >
                     {l.label}
                   </a>
                 ))}
               </nav>
+
+              {/* Mobile hamburger */}
+              <button
+                className="md:hidden inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100"
+                aria-label="Open menu"
+                aria-expanded={open}
+                onClick={() => setOpen(o => !o)}
+              >
+                {open ? (
+                  /* X icon */
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                ) : (
+                  /* Hamburger icon */
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/>
+                  </svg>
+                )}
+              </button>
             </Container>
+
+            {/* Mobile menu panel */}
+            <div
+              className={cn(
+                "md:hidden border-t border-gray-200 bg-white transition-all overflow-hidden",
+                open ? "max-h-96" : "max-h-0"
+              )}
+            >
+              <Container className="py-2">
+                <nav className="flex flex-col py-2">
+                  {links.map(l => (
+                    <a
+                      key={l.to}
+                      href={`#/${l.to}`}
+                      onClick={(e)=>{e.preventDefault(); onNav(l.to);}}
+                      className={cn(
+                        "px-3 py-2 rounded-md text-base",
+                        route===l.to ? "bg-teal-600/10 text-teal-700" : "text-gray-700 hover:bg-gray-100"
+                      )}
+                    >
+                      {l.label}
+                    </a>
+                  ))}
+                </nav>
+              </Container>
+            </div>
           </header>
         );
-      };
+      }
 
       const Footer = () => (
         <footer className="border-t border-gray-200">
@@ -149,7 +206,7 @@
           <div className="grid md:grid-cols-3 gap-6 mt-4">
             {[1,2,3].map(i => (
               <Card key={i}>
-                <div className="h-32 bg-gray-100 mb-3"></div>
+                <div className="h-32 bg-gray-100 mb-3 rounded"></div>
                 <h3 className="font-semibold">Founder {i}</h3>
                 <p className="text-sm text-gray-600">Role / short bio</p>
               </Card>
@@ -160,7 +217,13 @@
 
       const ClubsSection = () => (
         <Container className="py-16">
-          <h1 className="text-3xl mb-4">proMUN Clubs</h1>
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h1 className="text-3xl">proMUN Clubs</h1>
+              <p className="text-gray-600">Affiliated clubs across Portugal. Want to start one? Apply and we’ll help you launch in weeks.</p>
+            </div>
+            <a href="#/join" className="px-4 py-2 rounded-md bg-teal-600 text-white h-fit">Start a Club</a>
+          </div>
           {CLUBS.length === 0 && <p>No clubs yet. Be the first!</p>}
         </Container>
       );

@@ -22,7 +22,7 @@
 
       function useHashRoute() {
         const get = () => {
-          const h = (window.location.hash || "#/").replace(/^#\/?/, "");
+          const h = (window.location.hash || "#/" ).replace(/^#\/?/, "");
           const r = (h.split("/")[0] || "home");
           return ROUTES.includes(r) ? r : "home";
         };
@@ -38,7 +38,7 @@
 
       const CLUBS = [];
       const EVENTS = [
-        { title: "SJSMUN 2026 Conference", date: "December 2026", location: "Lisboa", blurb: "The official proMUN national conference for 2026.", href: "#" },
+        { title: "SJSMUN 2026 Conference", date: "December 2026", location: "Lisboa", blurb: "The official proMUN national conference for 2026." },
       ];
 
       const Container = ({children,className=""}) => <div className={cn("mx-auto max-w-7xl px-4 sm:px-6 lg:px-8", className)}>{children}</div>;
@@ -51,6 +51,7 @@
         );
         return href ? <a className={cls} href={href}>{children}</a> : <button className={cls} onClick={onClick} type={type}>{children}</button>;
       };
+
       const Logo = () => (
         <div className="flex items-center gap-2 select-none">
           <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden>
@@ -239,7 +240,7 @@
       const EventsSection = () => (
         <Container className="py-16">
           <h1 className="text-3xl mb-6">Events & Conferences</h1>
-        {EVENTS.map(e => (
+          {EVENTS.map(e => (
             <Card key={e.title}>
               <h3 className="text-lg font-semibold">{e.title}</h3>
               <p className="text-sm text-gray-600">{e.date} • {e.location}</p>
@@ -250,46 +251,50 @@
       );
 
       // ✅ Real Formspree-backed form with redirect + honeypot
-      const JoinSection = () => (
-        <Container className="py-16 max-w-3xl">
-          <h1 className="text-3xl mb-4">Start or Affiliate a proMUN Club</h1>
-          <p className="text-gray-600 mb-6">
-            Fill this in and we’ll get back to you via email. This form is powered by Formspree.
-          </p>
+      const JoinSection = () => {
+        const redirect = `${window.location.origin}${window.location.pathname}#/thanks`;
+        return (
+          <Container className="py-16 max-w-3xl">
+            <h1 className="text-3xl mb-4">Start or Affiliate a proMUN Club</h1>
+            <p className="text-gray-600 mb-6">
+              Fill this in and we’ll get back to you via email. This form is powered by Formspree.
+            </p>
 
-          <form
-            action="https://formspree.io/f/xldlagkr"
-            method="POST"
-            className="grid gap-4"
-          >
-            {/* Fields sent to your email */}
-            <input name="school" placeholder="School name" className="border p-2 rounded" required />
-            <input name="city" placeholder="City" className="border p-2 rounded" required />
-            <input name="liaison" placeholder="Club liaison (name)" className="border p-2 rounded" required />
-            <input type="email" name="email" placeholder="Email" className="border p-2 rounded" required />
-            <textarea name="message" placeholder="Message" className="border p-2 rounded" rows="5" required></textarea>
+            <form
+              action="https://formspree.io/f/xldlagkr"
+              method="POST"
+              className="grid gap-4"
+            >
+              {/* Fields sent to your email */}
+              <input name="school" placeholder="School name" className="border p-2 rounded" required />
+              <input name="city" placeholder="City" className="border p-2 rounded" required />
+              <input name="liaison" placeholder="Club liaison (name)" className="border p-2 rounded" required />
+              <input type="email" name="email" placeholder="Email" className="border p-2 rounded" required />
+              <textarea name="message" placeholder="Message" className="border p-2 rounded" rows="5" required></textarea>
 
-            {/* Optional: GDPR-style consent */}
-            <label className="flex items-start gap-2 text-sm text-gray-600">
-              <input type="checkbox" required className="mt-1" />
-              <span>I consent to proMUN contacting me regarding this request.</span>
-            </label>
+              {/* Optional: GDPR-style consent */}
+              <label className="flex items-start gap-2 text-sm text-gray-600">
+                <input type="checkbox" name="consent" value="yes" required className="mt-1" />
+                <span>I consent to proMUN contacting me regarding this request.</span>
+              </label>
 
-            {/* Hidden helpers */}
-            <input type="hidden" name="_subject" value="New proMUN club contact" />
-            <!-- After success, go to the built-in Thanks page -->
-            <input type="hidden" name="_redirect" value="#/thanks" />
-            <!-- Honeypot (bots will fill; humans won't) -->
-            <input type="text" name="_gotcha" className="hidden" tabIndex="-1" autoComplete="off" />
+              {/* Hidden helpers */}
+              <input type="hidden" name="_subject" value="New proMUN club contact" />
+              {/* After success, go to the built-in Thanks page (absolute URL improves reliability) */}
+              <input type="hidden" name="_redirect" value={redirect} />
+              {/* Honeypot (bots will fill; humans won't) */}
+              <label className="sr-only" htmlFor="website">Leave this field empty</label>
+              <input id="website" name="website" tabIndex="-1" aria-hidden="true" autoComplete="off" className="sr-only" />
 
-            <Button type="submit">Send</Button>
-          </form>
+              <Button type="submit">Send</Button>
+            </form>
 
-          <p className="text-xs text-gray-500 mt-3">
-            Having issues? Email us or DM on Instagram (@promun) and we’ll help.
-          </p>
-        </Container>
-      );
+            <p className="text-xs text-gray-500 mt-3">
+              Having issues? Email us or DM on Instagram (@promun) and we’ll help.
+            </p>
+          </Container>
+        );
+      };
 
       const SupportSection = () => (
         <Container className="py-16 max-w-3xl">

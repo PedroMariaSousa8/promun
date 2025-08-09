@@ -18,7 +18,7 @@
     <script type="text/babel">
       const { useState, useEffect, useMemo } = React;
       const cn = (...c) => c.filter(Boolean).join(" ");
-      const ROUTES = ["home","about","clubs","resources","events","join","support"];
+      const ROUTES = ["home","about","clubs","resources","events","join","support","thanks"];
 
       function useHashRoute() {
         const get = () => {
@@ -43,13 +43,13 @@
 
       const Container = ({children,className=""}) => <div className={cn("mx-auto max-w-7xl px-4 sm:px-6 lg:px-8", className)}>{children}</div>;
       const Card = ({children}) => <div className="rounded-xl border border-gray-200 p-6 bg-white shadow-sm">{children}</div>;
-      const Button = ({children,onClick,href,variant="primary"}) => {
+      const Button = ({children,onClick,href,variant="primary",type}) => {
         const cls = cn(
           "px-4 py-2 rounded-md text-sm font-medium",
           variant === "primary" && "bg-teal-600 text-white hover:bg-teal-700",
           variant === "outline" && "border border-gray-300 hover:bg-gray-50"
         );
-        return href ? <a className={cls} href={href}>{children}</a> : <button className={cls} onClick={onClick}>{children}</button>;
+        return href ? <a className={cls} href={href}>{children}</a> : <button className={cls} onClick={onClick} type={type}>{children}</button>;
       };
       const Logo = () => (
         <div className="flex items-center gap-2 select-none">
@@ -83,7 +83,6 @@
           { to: "support", label: "Support" },
         ]), []);
 
-        // Close mobile menu on route change
         useEffect(() => { setOpen(false); }, [route]);
 
         return (
@@ -113,12 +112,10 @@
                 onClick={() => setOpen(o => !o)}
               >
                 {open ? (
-                  /* X icon */
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
                 ) : (
-                  /* Hamburger icon */
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/>
                   </svg>
@@ -242,7 +239,7 @@
       const EventsSection = () => (
         <Container className="py-16">
           <h1 className="text-3xl mb-6">Events & Conferences</h1>
-          {EVENTS.map(e => (
+        {EVENTS.map(e => (
             <Card key={e.title}>
               <h3 className="text-lg font-semibold">{e.title}</h3>
               <p className="text-sm text-gray-600">{e.date} • {e.location}</p>
@@ -252,17 +249,45 @@
         </Container>
       );
 
+      // ✅ Real Formspree-backed form with redirect + honeypot
       const JoinSection = () => (
         <Container className="py-16 max-w-3xl">
           <h1 className="text-3xl mb-4">Start or Affiliate a proMUN Club</h1>
-          <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); alert("Submitted (demo)"); }}>
-            <input placeholder="School name" className="border p-2 rounded" required />
-            <input placeholder="City" className="border p-2 rounded" required />
-            <input placeholder="Club liaison" className="border p-2 rounded" required />
-            <input type="email" placeholder="Email" className="border p-2 rounded" required />
-            <textarea placeholder="Message" className="border p-2 rounded"></textarea>
-            <Button>Submit</Button>
+          <p className="text-gray-600 mb-6">
+            Fill this in and we’ll get back to you via email. This form is powered by Formspree.
+          </p>
+
+          <form
+            action="https://formspree.io/f/xldlagkr"
+            method="POST"
+            className="grid gap-4"
+          >
+            {/* Fields sent to your email */}
+            <input name="school" placeholder="School name" className="border p-2 rounded" required />
+            <input name="city" placeholder="City" className="border p-2 rounded" required />
+            <input name="liaison" placeholder="Club liaison (name)" className="border p-2 rounded" required />
+            <input type="email" name="email" placeholder="Email" className="border p-2 rounded" required />
+            <textarea name="message" placeholder="Message" className="border p-2 rounded" rows="5" required></textarea>
+
+            {/* Optional: GDPR-style consent */}
+            <label className="flex items-start gap-2 text-sm text-gray-600">
+              <input type="checkbox" required className="mt-1" />
+              <span>I consent to proMUN contacting me regarding this request.</span>
+            </label>
+
+            {/* Hidden helpers */}
+            <input type="hidden" name="_subject" value="New proMUN club contact" />
+            <!-- After success, go to the built-in Thanks page -->
+            <input type="hidden" name="_redirect" value="#/thanks" />
+            <!-- Honeypot (bots will fill; humans won't) -->
+            <input type="text" name="_gotcha" className="hidden" tabIndex="-1" autoComplete="off" />
+
+            <Button type="submit">Send</Button>
           </form>
+
+          <p className="text-xs text-gray-500 mt-3">
+            Having issues? Email us or DM on Instagram (@promun) and we’ll help.
+          </p>
         </Container>
       );
 
@@ -270,6 +295,19 @@
         <Container className="py-16 max-w-3xl">
           <h1 className="text-3xl mb-4">Support proMUN</h1>
           <p>Your donation enables free resources for public schools.</p>
+        </Container>
+      );
+
+      // Simple Thank You page for Formspree redirect
+      const ThanksSection = () => (
+        <Container className="py-24 text-center max-w-2xl">
+          <h1 className="text-4xl font-extrabold">Thank you! 🎉</h1>
+          <p className="mt-4 text-gray-700">
+            We’ve received your message and will reply as soon as possible.
+          </p>
+          <div className="mt-8">
+            <Button href="#/home" variant="outline">Back to Home</Button>
+          </div>
         </Container>
       );
 
@@ -287,6 +325,7 @@
               {route === "events" && <EventsSection />}
               {route === "join" && <JoinSection />}
               {route === "support" && <SupportSection />}
+              {route === "thanks" && <ThanksSection />}
             </main>
             <Footer />
           </div>
